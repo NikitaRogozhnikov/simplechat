@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Index{% endblock %}
+{% block content %}
+{%if user.username == ''%}
+<main role="main" class="inner cover">
+  <h1 class="cover-heading">Здравствуйте!</h1>
+  <p class="lead">Для того чтобы начать диалог нужно войти или зарегистрироваться.</p>
+  <p class="lead">
+    <a href="{% url 'Chat:login' %}" class="btn btn-lg btn-secondary">Войти</a>
+    <a href="{% url 'Chat:register' %}" class="btn btn-lg btn-secondary">Зарегистрироваться</a>
+  </p>
+</main>
+{%else%}
+<main role="main" class="inner cover">
+  <h1 class="cover-heading">Здравствуйте {{user.username}}!</h1>
+  {% if error %}
+  <div style="color:red;">{{ error }}</div>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label> Введите ник собеседника</label>
+        <input type="text" name="talker" class="form-control" id="room-name-input" aria-describedby="emailHelp">
+    </div>
+    <input id="room-name-submit" class="btn btn-lg btn-secondary"  type="submit" value="Начать общение">
+  </form>
+</main>
+{% if ready %}
+<h1>{{curentuser}} to {{talker}}</h1>
+<h1>Chat: {{chat}}</h1>
+<script>
+  var roomName='{{chat}}'
+  window.location.pathname = '/chat/' + roomName;
+</script>
+{%endif%}
+<!---
+<script>
+  document.querySelector('#room-name-input').focus();
+  document.querySelector('#room-name-input').onkeyup = function(e) {
+      if (e.keyCode === 13) {  // enter, return
+          document.querySelector('#room-name-submit').click();
+      }
+  };
+
+  document.querySelector('#room-name-submit').onclick = function(e) {
+      var roomName = document.querySelector('#room-name-input').value;
+      window.location.pathname = '/chat/' + roomName;
+  };
+</script>
+<script>
+  var roomName='{{talker}}'
+  window.location.pathname = '/chat/' + roomName;
+</script>
+-->
+{%endif%}
+{% endblock %}
