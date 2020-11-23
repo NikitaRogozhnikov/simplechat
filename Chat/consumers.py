@@ -9,13 +9,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
-        #chat=Chat.objects.get(pk=int(self.room_name)).message_set.all()
-        #print(chat)
 
         print (self.scope["url_route"])
         self.party.add(self.scope["user"].username)
         print (self.party)
-        # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -24,7 +21,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        # Leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -32,7 +28,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         party.remove(self.scope["user"].username)
         print("exit: ",self.masseges)
 
-    # Receive message from WebSocket
+    
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = self.scope["user"].username+': '+text_data_json['message']
@@ -54,7 +50,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         
 
-    # Receive message from room group
     async def chat_message(self, event):
         message = event['message']
 
@@ -62,58 +57,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
-     
-'''
-import json
-from asgiref.sync import async_to_sync
-from channels.generic.websocket import WebsocketConsumer
-from Chat.models import Chat, Message
-class ChatConsumer(WebsocketConsumer):
-    #party=set()
-    
-    def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
-        self.chat=Chat.objects.get(pk=int(self.room_name))
-        mes=[]
-        for i in self.chat.message_set.all():
-            mes.append(i.messages)
-
-        jmes='\n'.join(mes)
-        # Join room group
-        async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
-            self.channel_name
-        )
-        '''
-        if self.scope['user'].username not in self.party: 
-            async_to_sync(self.channel_layer.group_send)(
-                self.room_group_name,
-                {
-                    'type': 'chat_message',
-                    'message': jmes
-                }
-            )
-            self.party.add(self.scope['user'].username)
-        
-        print('channel_layer is: ',self.channel_layer)
-        ev={'type': 'chat_message', 'message': jmes}
-        ev_mes=ev['message']
-        self.send(text_data=json.dumps({
-            'message': jmes
-        }))
-        '''
         self.accept()
 
     def disconnect(self, close_code):
-        # Leave room group
-        #self.party.remove(self.scope['user'].username)
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
         )
 
-    # Receive message from WebSocket
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = self.scope["user"].username+': '+text_data_json['message']
@@ -127,12 +78,10 @@ class ChatConsumer(WebsocketConsumer):
             }
         )
 
-    # Receive message from room group
     def chat_message(self, event):
         print('event is: ',event)
         message = event['message']
 
-        # Send message to WebSocket
         self.send(text_data=json.dumps({
             'message': message
         }))
